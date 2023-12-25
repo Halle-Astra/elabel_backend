@@ -26,7 +26,7 @@ import shutil
 def ndarray2base64(img, ext = '.jpg'):
     stream = cv2.imencode(ext, img)[1]
     base64_str = str(base64.b64encode(stream))
-    print(base64_str[:100])
+    # print(base64_str[:100]) # 从这里来看，编码完成后，也是不会自己带"data:image/"这类东西的
     base64_str = base64_str[2:-1] # str(base64.b64encode(stream))[2:-1]
     return base64_str
 

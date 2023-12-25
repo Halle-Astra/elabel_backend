@@ -59,7 +59,7 @@ def upload():
 
     mask_png = ndarray2base64(mask, '.png')
     mask_png = "data:image/png;base64,"+mask_png
-    print(mask.shape)
+    # print(mask.shape)
     return mask_png
 
 
