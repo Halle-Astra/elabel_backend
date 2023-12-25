@@ -19,7 +19,7 @@ import shutil
 from flask import current_app as session
 from flask import render_template, request
 
-from utils import base64_to_ndarray
+from utils import base64_to_ndarray, ndarray2base64
 
 app = Flask(__name__, static_folder='static')
 app.debug = True
@@ -27,8 +27,11 @@ app.secret_key = os.urandom(24)
 CORS(app, resources='/*', origins='*', methods=['GET', 'POST'])
 
 import flask
-
 print(flask.__version__)
+
+from model_apps.sam import SAM
+sam = SAM(device='cuda')
+
 
 @app.route('/label.online/sam/upload',methods=["POST"])
 @cross_origin()
@@ -42,9 +45,22 @@ def upload():
     pos_points = data_js.get('pos_points')
     neg_points = data_js.get('neg_points')
     img = base64_to_ndarray(img_b64)
-    print(img.shape) # 510, 384, 4 四通道图像
+    # print(img.shape) # 510, 384, 4 四通道图像
 
-    return "0"
+    points  = pos_points + neg_points
+    labels = [1]*len(pos_points)+ [0]*len(neg_points)
+    points = np.asarray(points)
+    labels = np.asarray(labels)
+    img = img[...,:-1]
+    sam.set_image(img)
+    mask = sam.predict(points, labels) # (h,w) # 另外，png的编码和jpg的编码结果不是一样的格式！
+    mask = mask.astype(np.uint8)
+    mask = mask*255
+
+    mask_png = ndarray2base64(mask, '.png')
+    mask_png = "data:image/png;base64,"+mask_png
+    print(mask.shape)
+    return mask_png
 
 
 
